@@ -69,17 +69,27 @@ def main(mac, serial):
 
 
 if __name__ == '__main__':
+    def bssid_arg(value):
+        # Remove non-alphanum characters (e.g., colon or dashes)
+        value = re.sub('[^a-zA-Z0-9]', '', value)
+
+        if len(value) < 4:
+            raise argparse.ArgumentTypeError('BSSID of the target device is too short; last 2 octects (4 characters) are required.')
+        else:
+            return value
+
+    def serial_arg(value):
+        if len(value) < 4:
+            raise argparse.ArgumentTypeError('Serial number of the target device is too short; last 4 characters are required.')
+        elif re.search('[^a-zA-Z0-9]', value) is not None:
+            raise argparse.ArgumentTypeError('Found non-alphanumerical character in serial number, please make sure to use a valid serial number.')
+        else:
+            return value
+
     parser = argparse.ArgumentParser(description='WPS pin generator for some Belkin routers.')
-    parser.add_argument('bssid', help='BSSID of the target device (last 2 octets required)')
-    parser.add_argument('serial', help='Serial number of the target device, usually found in a probe response (last 4 digits required)')
+    parser.add_argument('bssid', help='BSSID of the target device (last 2 octets required)', type=bssid_arg)
+    parser.add_argument('serial', help='Serial number of the target device, usually found in a probe response (last 4 chars required)', type=serial_arg)
 
     args = parser.parse_args()
     
-    # @todo Move this to a parser validator
-    bssid = re.sub('[^a-zA-Z0-9]', '', args.bssid)
-    
-    # @todo Move this to a parser validator
-    if re.search('[^a-zA-Z0-9]', args.serial) is not None:
-        print('Found non-alphanumerical character in serial number, please make sure to use a valid serial number.')
-    else:
-        print('Default WPS PIN:', main(args.bssid, args.serial))
+    print('Default WPS PIN:', main(args.bssid, args.serial))
